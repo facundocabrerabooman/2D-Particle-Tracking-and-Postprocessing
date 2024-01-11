@@ -1,11 +1,11 @@
 %% detect particles on faraday waves
 clear all, close all, clear
 
-name = '200Hz';
+name = 'test';
 
 %pathin = ['/Users/FC/GoogleDrive/.shortcut-targets-by-id/1Pig6Q_rbK2uqGJyDkfT1vrOXI-BjZY3x/DDT_projects/Faraday_waves/particle_videos_ground/200Hz/' name filesep];
-pathin = cd;
-vids = dir([pathin filesep '*.MP4']);
+pathin = '/Users/fcb/AuxFiles/ISS/EXP11/';
+vids = dir([pathin filesep name filesep '*.tiff']);
 cd(pathin)
 
 

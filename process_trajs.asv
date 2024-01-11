@@ -1,198 +1,114 @@
-%% detect particles on faraday waves
-clear all, close all, clear
+%% Overall Definitions
 
-name = 'Test 28';
+clear;clc;close all
 
-pathin = ['/Users/nataliefrank/Library/CloudStorage/GoogleDrive-natal8@pdx.edu/.shortcut-targets-by-id/15YNzxVZQM1XF1MixsqjektO5yZIwhJTu' ...
-    '/ISS-CASIS/Experimental Design/Container design/' name '/images'];
-pathout = ['/Users/nataliefrank/Library/CloudStorage/GoogleDrive-natal8@pdx.edu/.shortcut-targets-by-id/15YNzxVZQM1XF1MixsqjektO5yZIwhJTu' ...
-    '/ISS-CASIS/Experimental Design/Container design/' name '/post processing'];
-files = dir([pathin filesep '*.tiff']);
-numFrames = numel(files)-20;
+% Set path were functions will be read from
+addpath(genpath('/Users/fcb/Documents/GitHub/2D-Particle-Tracking-and-Postprocessing/'));
 
-cd(pathout)
+fps = 112;
 
+fname = 'EXP11';
 
-%%% cut frames so to only see tank
-corners = [5 570 298 575]; %[top bottom left right]
-%%%
-pxtomm = 1;
+% pathin = ['/Users/nataliefrank/Library/CloudStorage/GoogleDrive-natal8@pdx.edu/.shortcut-targets-by-id/15YNzxVZQM1XF1MixsqjektO5yZIwhJTu' ...
+%     '/ISS-CASIS/Experimental Design/Earth tests/' name '/images'];
+% pathout = ['/Users/nataliefrank/Library/CloudStorage/GoogleDrive-natal8@pdx.edu/.shortcut-targets-by-id/15YNzxVZQM1XF1MixsqjektO5yZIwhJTu' ...
+%     '/ISS-CASIS/Experimental Design/Earth tests/' name '/post processing'];
 
+pathin = '/Volumes/landau2/ISS/EXP11/images/';
+pathout = '/Volumes/landau2/ISS/EXP11/postproc/'; mkdir(pathout)
+cd(pathout);
 
-video_track = VideoWriter([pathout filesep name],'MPEG-4'); %create video
-video_track.FrameRate = 5;
-vide_track.Quality = 20;
-open(video_track);
-idx=0;
-CC=[];
-R=[];
+load('trajf','trajf')
+trajs_conc=trajf;
+%% Compute pdfs
 
+pdfX(1) = mkpdf5(trajs_conc,'xf',256,10);
+pdfX(2) = mkpdf5(trajs_conc,'yf',256,10);
 
-for ii = 1:1:11870 % for over frames
-    clear fr_cc fr_r
-    ii
+pdfV(1) = mkpdf5(trajs_conc,'Vx',256,10);
+pdfV(2) = mkpdf5(trajs_conc,'Vy',256,10);
 
-    idx = idx+1;
-
-    frame = imread([pathin filesep files(ii).name]);
-
-    %%%%%
-    framecut_or = frame(corners(1):corners(2), corners(3):corners(4));
-    % imshow(framecut_or);
-
-    frame = imadjust(framecut_or);
-
-    % frame(frame<11000)=0;       %CHECK the intensity of the image
-    % frame_bw=imbinarize(frame);
-    % imshow(frame_bw);
-
-    %if background is darker than particles
-    frame_bw = ~frame;
-    % imshow(frame_bw);
+pdfA(1) = mkpdf5(trajs_conc,'Ax',256,20);
+pdfA(2) = mkpdf5(trajs_conc,'Ay',256,20);
 
 
-    %BW = imregionalmax(frame_bw,8);
+%% Plot Normalized PDFs
 
-    %[cc, r] = imfindcircles(framecut,[1 10]);
-    PP=regionprops(frame_bw, 'Centroid', 'Eccentricity', 'EquivDiameter');
+figure;
+semilogy(pdfX(1).xpdfn,pdfV(1).pdfn,'d',MarkerSize=3,Color=color3(1,:),LineWidth=2);hold on;
+semilogy(pdfX(2).xpdfn,pdfV(2).pdfn,'d',MarkerSize=3,Color=color3(2,:),LineWidth=2);
+semilogy(pdfX(3).xpdfn,pdfV(3).pdfn,'d',MarkerSize=3,Color=color3(3,:),LineWidth=2);
 
+%set(gca,FontSize=15)
+legend('$X$','$Y$','$Z$','interpreter','latex',Location='northeast');
+%title('$PDF$','interpreter','latex',FontWeight='bold',FontSize=18)
+ylabel('$PDF(\frac{X-\langle X \rangle}{std(X)})$','interpreter','latex',FontWeight='bold')
+xlabel('$\frac{X-\langle X \rangle}{std(X)}$','interpreter','latex',FontWeight='bold')
+grid off
+axis padded
+ylim([5e-7 1])
 
-    % PP([PP.Eccentricity]>.95 ,:) = [];
-    % PP([PP.EquivDiameter]<2,:) = [];
-    PP([PP.EquivDiameter]<3,:) = [];      % CHECK take things out that are too big
-
-    r = [PP.EquivDiameter].*2;
-    cc = cat(1,PP.Centroid);
-
-    %%% debug plot
-
-    if mod(ii,50)==0
-        f=figure('visible', 'off');
-        clf;imshow(frame_bw);hold on
-        viscircles(cc, r,'EdgeColor','r');
-        title(num2str(ii))
-        pause(0.1)
-        writeVideo(video_track,getframe(gcf))
-    end
+folderout = 'pdfs/';
+mkdir(folderout)
+savefig_FC([folderout filesep 'PDF_x'],8,6,'pdf')
+savefig_FC([folderout filesep 'PDF_x'],8,6,'fig')
+%%%%%%%%%
 
 
+figure;
+semilogy(pdfV(1).xpdfn,pdfV(1).pdfn,'d',MarkerSize=3,Color=color3(1,:),LineWidth=2);hold on;
+semilogy(pdfV(2).xpdfn,pdfV(2).pdfn,'d',MarkerSize=3,Color=color3(2,:),LineWidth=2);
+semilogy(pdfV(3).xpdfn,pdfV(3).pdfn,'d',MarkerSize=3,Color=color3(3,:),LineWidth=2);
 
-    %cc = cc.*pxtomm; % to mm
-    %r = r.*pxtomm;
+xpdf=linspace(-5,5,1024);
+plot(xpdf,normpdf(xpdf,0,1),Color=color1,LineWidth=3);
 
-    fr_cc = [ones(size(cc,1),1).*idx cc zeros(size(cc,1),1)]; % zeros are 3rd coordinate that we do not have
-    fr_r = [ones(size(cc,1),1).*idx r' zeros(size(cc,1),1)];
-    CC = [CC ; fr_cc];
-    R = [R ; fr_r];
+legend('$V_x$','$V_y$','$V_z$','Gaussian','interpreter','latex',Location='northeast');
+ylabel('$PDF(\frac{V-\langle V \rangle}{std(V)})$','interpreter','latex',FontWeight='bold')
+xlabel('$\frac{V-\langle V \rangle}{std(V)}$','interpreter','latex',FontWeight='bold')
+grid off
+axis padded
+ylim([5e-7 1])
 
-end
-%close(video_track)
+folderout = 'pdfs/';
+mkdir(folderout)
+savefig_FC([folderout filesep 'PDF_v'],8,6,'pdf')
+savefig_FC([folderout filesep 'PDF_v'],8,6,'fig')
+%%%%%%%%%
 
-save([pathout filesep 'CC_R_' name '.mat'])
+figure;
 
+semilogy(pdfA(1).xpdfn,pdfA(1).pdfn,'d',MarkerSize=3,Color=color3(1,:),LineWidth=2); hold on
+semilogy(pdfA(2).xpdfn,pdfA(2).pdfn,'d',MarkerSize=3,Color=color3(2,:),LineWidth=2);
+semilogy(pdfA(3).xpdfn,pdfA(3).pdfn,'d',MarkerSize=3,Color=color3(3,:),LineWidth=2);
 
-%% Track particles
+xpdf=linspace(-5,5,1024);
+plot(xpdf,normpdf(xpdf,0,1),Color=color1,LineWidth=3);
 
-folderin = cd;
-folderout = folderin;
-
-traj_conc = [];
-name = 'Test ';
-
-for oo = 28
-    fname = [name num2str(oo)];
-    load(['CC_R_' fname],'CC')
-
-    maxdist=10;     %if particles are moving faster, then you need to increase this
-    lmin=10;        %use this if particles disappear. if a particle is detected for more than 10 frames, consider it an track it
-
-
-    flag_pred=1;
-    npriormax=1;
-    porder=3;
-    flag_conf=1;
-    nframes = 99999;
-    [traj,tracks]=track2d_faradaywaves(CC,folderin,folderout,fname,maxdist,lmin,flag_pred,npriormax,porder,flag_conf,[],nframes);
-
-    traj_conc=[traj_conc traj];
-end
-
-save('traj_conc','traj_conc')
-%% Plot trajs 2D
-
-load('traj_conc.mat')
-traj=traj_conc;
-pxtomm = 1;
-
-xt=vertcat(traj.x).*pxtomm;
-yt=vertcat(traj.y).*pxtomm;
-
-color=zeros(length(xt),1);
-c=1;
-for k=1:length(traj)
-    temp=traj(k).length;
-    color(c:c+temp-1)=k;
-    c=c+temp;
-end
-
-%figure(4);clf
-figure
-[~,uniq] = unique(color);
-for ii=1:numel(uniq)-1
-    plot(xt(uniq(ii):uniq(ii+1)-1),yt(uniq(ii):uniq(ii+1)-1),'.-');hold on
-end
-axis equal
-box on; grid on
-xlabel('mm')
-ylabel('mm')
-% ylim([-5 95])
-% xlim([-5 95])
-
-savefig('traj_conc')
-
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Traj Analysis
-
-load('traj_conc.mat')
-
-%%% compute velocity through a gaussian filter
-
-w = 3; % filter intensity
-fps = 250;
-[~, trajf]=compute_vel_acc_traj(traj_conc,fps,w);
-
-save('traj_concf','trajf','pxtomm')
+ylabel('$PDF(\frac{A-\langle A \rangle}{std(A)})$','interpreter','latex',FontWeight='bold')
+legend('$A_x$','$A_y$','$A_z$','Gaussian','interpreter','latex',Location='northeast');
+xlabel('$\frac{A-\langle A \rangle}{std(A)}$','interpreter','latex',FontWeight='bold')
+grid off
+%xlim([-5 5])
+ylim([5e-7 1])
 
 
-%% Plot filtered traj
-
-load('traj_concf.mat')
-
-xt=vertcat(trajf.xf).*pxtomm;
-yt=vertcat(trajf.yf).*pxtomm;
-color=zeros(length(xt),1);
-c=1;
-for k=1:length(trajf)
-    temp=trajf(k).lengthf;
-    color(c:c+temp-1)=k;
-    c=c+temp;
-end
+folderout = 'pdfs/';
+mkdir(folderout)
+savefig_FC([folderout 'PDF_a'],8,6,'pdf')
+savefig_FC([folderout 'PDF_a'],8,6,'fig')
 
 
-%figure(4);clf
-figure
-[~,uniq] = unique(color);
-for ii=1:numel(uniq)-1
-    plot(xt(uniq(ii):uniq(ii+1)-1),yt(uniq(ii):uniq(ii+1)-1),'.-');hold on
-end
-axis equal
-box on; grid on
-xlabel('mm')
-ylabel('mm')
-% ylim([-5 95])
-% xlim([-5 95])
 
-savefig('traj_concf')
+
+
+
+
+
+
+
+
+
 
 
 %% Histogram of position
@@ -221,7 +137,7 @@ histogram(vertcat(trajf.uf).*pxtomm,50,'FaceColor','r');hold on
 subplot(1,2,2)
 histogram(vertcat(trajf.vf).*pxtomm,50,'FaceColor','g');
 
-title('Hist. Vel. [mm/s]'); %xlim([-60 60]);% ylim([0 3000]);
+title('Hist. Vel. [px/s]'); %xlim([-60 60]);% ylim([0 3000]);
 
 %xline(mean(vertcat(trajf.uf)),'r',mean(vertcat(trajf.uf)))
 %xline(mean(vertcat(trajf.vf)),'g',mean(vertcat(trajf.vf)))
