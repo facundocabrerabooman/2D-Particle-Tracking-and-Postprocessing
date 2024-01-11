@@ -7,9 +7,9 @@ addpath(genpath('/Users/fcb/Documents/GitHub/2D-Particle-Tracking-and-Postproces
 
 
 pxtomm = 0.091;
-fps = 112;
+fps = 150; 
 
-fname = 'EXP11';
+fname = 'EXP11_a';
 
 % pathin = ['/Users/nataliefrank/Library/CloudStorage/GoogleDrive-natal8@pdx.edu/.shortcut-targets-by-id/15YNzxVZQM1XF1MixsqjektO5yZIwhJTu' ...
 %     '/ISS-CASIS/Experimental Design/Earth tests/' name '/images'];
@@ -20,15 +20,15 @@ pathin = '/Volumes/landau2/ISS/EXP11/images/';
 pathout = '/Volumes/landau2/ISS/EXP11/postproc/'; mkdir(pathout)
 cd(pathout);
 
-%% Detect particles 
-
-files = dir([pathin filesep '*.tiff']);
-numFrames = numel(files)-1;
+%% Detect particles -- choose intensity_cut
 
 %%% cut frames so to only see tank
 corners = [126 590 255 715]; %[top bottom left right]
+intensity_cut = 4.5e4;
 %%%
 
+files = dir([pathin filesep '*.tiff']);
+numFrames = numel(files)-1;
 
 video_track = VideoWriter([pathout filesep fname],'MPEG-4'); %create video
 video_track.FrameRate = 5;
@@ -37,10 +37,6 @@ open(video_track);
 idx=0;
 CC=[];
 R=[];
-
-%get background if you don't have the image
-%bkg = getBkg(pathin,1,numFrames,1,[]); 
-%doesn't work really well.
 
 
 for ii = 1:numFrames
@@ -57,23 +53,11 @@ for ii = 1:numFrames
 
     frame_cut = imadjust(frame_cut);
 
-    frame_cut(frame_cut<4.5e4)=0;       %CHECK the intensity of the image
+    frame_cut(frame_cut<intensity_cut)=0;       %CHECK the intensity of the image
     frame_bw=imbinarize(frame_cut);
-    % imshow(frame_bw);
 
-    %if background is darker than particles
-    %frame_bw = ~frame_cut;
-    % imshow(frame_bw);
-
-
-    %BW = imregionalmax(frame_bw,8);
-
-    %[cc, r] = imfindcircles(frame_cut,[2 4]);
     PP=regionprops(frame_bw, 'Centroid', 'Eccentricity', 'MajorAxisLength');
 
-
-    % PP([PP.Eccentricity]>.95 ,:) = [];
-    % PP([PP.EquivDiameter]<2,:) = [];
     PP([PP.MajorAxisLength]>7,:) = [];      % Take out things that are too big
 
     r = [PP.MajorAxisLength]./2;
@@ -114,25 +98,18 @@ pathout = pathin;
 
 traj_conc = [];
 
+load(['CC_R_' fname],'CC')
 
-for oo = 11
-    fname = ['EXP' num2str(oo)];
-    load(['CC_R_' fname],'CC')
+maxdist=10;     %if particles are moving faster, then you need to increase this
+lmin=10;        %use this if particles disappear. if a particle is detected for more than 10 frames, consider it and track it
+flag_pred=1;
+npriormax=1;
+porder=3;
+flag_conf=1;
+nframes = 99999;
+[traj,tracks]=track2d(CC,pathin,pathout,fname,maxdist,lmin,flag_pred,npriormax,porder,flag_conf,[],nframes);
 
-    maxdist=10;     %if particles are moving faster, then you need to increase this
-    lmin=10;        %use this if particles disappear. if a particle is detected for more than 10 frames, consider it and track it
-
-
-    flag_pred=1;
-    npriormax=1;
-
-    porder=3;
-    flag_conf=1;
-    nframes = 99999;
-    [traj,tracks]=track2d(CC,pathin,pathout,fname,maxdist,lmin,flag_pred,npriormax,porder,flag_conf,[],nframes);
-
-    traj_conc=[traj_conc traj];
-end
+traj_conc=[traj_conc traj];
 
 save('traj_conc','traj_conc')
 %% Plot Trajs
@@ -256,3 +233,24 @@ mkdir(folderout)
 savefig_fcb([folderout 'filteredtrajs'],8,6,'pdf')
 savefig_fcb([folderout 'filteredtrajs'],8,6,'fig')
 
+%% Concatenate trajectories
+
+if 1==pi
+
+    trajs_conc = [];
+    
+    load('trajs_EXP11_a.mat')
+    trajs_conc = [trajs_conc trajsf];
+    clear trajsf
+    1
+    load('trajs_EXP11_b.mat')
+    trajs_conc = [trajs_conc trajsf];
+    clear trajsf
+    2
+    load('trajs_EXP11_c.mat')
+    trajs_conc = [trajs_conc trajsf];
+    clear trajsf
+
+end
+
+save('traj_conc','trajs_conc')

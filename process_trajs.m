@@ -5,7 +5,7 @@ clear;clc;close all
 % Set path were functions will be read from
 addpath(genpath('/Users/fcb/Documents/GitHub/2D-Particle-Tracking-and-Postprocessing'));
 
-Fs = 112;
+Fs = 150;
 
 fname = 'EXP11';
 
@@ -18,8 +18,8 @@ pathin = '/Volumes/landau2/ISS/EXP11/images';
 pathout = '/Volumes/landau2/ISS/EXP11/postproc'; mkdir(pathout)
 cd(pathout);
 
-load('trajf','trajf')
-trajs_conc=trajf;
+load('traj_conc','traj_conc')
+%trajs_conc=trajf;
 %% Nice colors
 mycolormap = mycolor('#063970','#e28743');%('#063970','#eeeee4','#e28743')
 color3 = [mycolormap(1,:);mycolormap((size(mycolormap,1)+1)/2,:);mycolormap(end,:)];
