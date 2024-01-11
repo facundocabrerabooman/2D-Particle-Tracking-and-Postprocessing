@@ -3,19 +3,19 @@
 clear;clc;close all
 
 % Set path were functions will be read from
-addpath(genpath('/Users/fcb/Documents/GitHub/2D-Particle-Tracking-and-Postprocessing/'));
+addpath(genpath('/Users/fcb/Documents/GitHub/2D-Particle-Tracking-and-Postprocessing'));
 
 Fs = 112;
 
 fname = 'EXP11';
 
 % pathin = ['/Users/nataliefrank/Library/CloudStorage/GoogleDrive-natal8@pdx.edu/.shortcut-targets-by-id/15YNzxVZQM1XF1MixsqjektO5yZIwhJTu' ...
-%     '/ISS-CASIS/Experimental Design/Earth tests/' name '/images'];
+%     '/ISS-CASIS/Experimental Design/Earth tests' name '/images'];
 % pathout = ['/Users/nataliefrank/Library/CloudStorage/GoogleDrive-natal8@pdx.edu/.shortcut-targets-by-id/15YNzxVZQM1XF1MixsqjektO5yZIwhJTu' ...
-%     '/ISS-CASIS/Experimental Design/Earth tests/' name '/post processing'];
+%     '/ISS-CASIS/Experimental Design/Earth tests' name '/post processing'];
 
-pathin = '/Volumes/landau2/ISS/EXP11/images/';
-pathout = '/Volumes/landau2/ISS/EXP11/postproc/'; mkdir(pathout)
+pathin = '/Volumes/landau2/ISS/EXP11/images';
+pathout = '/Volumes/landau2/ISS/EXP11/postproc'; mkdir(pathout)
 cd(pathout);
 
 load('trajf','trajf')
@@ -51,7 +51,7 @@ grid off
 axis padded
 ylim([5e-7 1])
 
-folderout = 'pdfs/';
+folderout = 'pdfs';
 mkdir(folderout)
 savefig_FC([folderout filesep 'PDF_x'],8,6,'pdf')
 savefig_FC([folderout filesep 'PDF_x'],8,6,'fig')
@@ -72,7 +72,7 @@ grid off
 axis padded
 ylim([5e-7 1])
 
-folderout = 'pdfs/';
+folderout = 'pdfs';
 mkdir(folderout)
 savefig_FC([folderout filesep 'PDF_v'],8,6,'pdf')
 savefig_FC([folderout filesep 'PDF_v'],8,6,'fig')
@@ -94,10 +94,10 @@ grid off
 ylim([5e-7 1])
 
 
-folderout = 'pdfs/';
+folderout = 'pdfs';
 mkdir(folderout)
-savefig_FC([folderout 'PDF_a'],8,6,'pdf')
-savefig_FC([folderout 'PDF_a'],8,6,'fig')
+savefig_FC([folderout filesep 'PDF_a'],8,6,'pdf')
+savefig_FC([folderout filesep 'PDF_a'],8,6,'fig')
 
 %% Table with moments of distribution
 maketable(pdfA,pdfV,folderout)
@@ -124,10 +124,10 @@ grid on
 axis padded
 
 
-folderout = 'MSS/';
+folderout = 'MSS';
 mkdir(folderout)
-savefig_FC([folderout 'MSS'],8,6,'pdf')
-savefig_FC([folderout 'MSS'],8,6,'fig')
+savefig_FC([folderout filesep 'MSS'],8,6,'pdf')
+savefig_FC([folderout filesep 'MSS'],8,6,'fig')
 
 %% Longitudinal S2
 
@@ -153,10 +153,10 @@ text(1e-2,1.5e4,'$\tau$','interpreter','latex','FontWeight','bold','FontSize',20
 grid on
 axis padded
 
-folderout = 'S2L/';
+folderout = 'S2L';
 mkdir(folderout)
-savefig_FC([folderout 'S2L'],8,6,'pdf')
-savefig_FC([folderout 'S2L'],8,6,'fig')
+savefig_FC([folderout filesep 'S2L'],8,6,'pdf')
+savefig_FC([folderout filesep 'S2L'],8,6,'fig')
 
 
 %% Velocity and Acceleration Correlations
@@ -216,10 +216,10 @@ xlabel('$\tau$/s')
 grid on
 axis tight
 
-folderout = 'corr/';
+folderout = 'corr';
 mkdir(folderout)
-savefig_FC([folderout 'corr_classic'],8,6,'pdf')
-savefig_FC([folderout 'corr_classic'],8,6,'fig')
+savefig_FC([folderout filesep 'corr_classic'],8,6,'pdf')
+savefig_FC([folderout filesep 'corr_classic'],8,6,'fig')
 
 stop
 %% Fractal dimensions
